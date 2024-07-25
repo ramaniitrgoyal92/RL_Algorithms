@@ -20,6 +20,9 @@ import matplotlib.pyplot as plt
 
 def vanderpol(y,u,mu):
     """ Return the derivative vector for the van der Pol equations."""
+    if u.ndim >= 1:
+        u = u.flatten()[0]
+
     y1= y[0]
     y2= y[1]
     dy1=y2
@@ -73,14 +76,15 @@ def draw_figure(y,t):
 if __name__ == "__main__":
     
     cwd = os.getcwd()
-    file = Path(cwd)/"Iterative_LQR (iLQR)/VanderPolOscillator/policies/control.npy"  
+    file_loc = Path(cwd)/"Iterative_LQR (iLQR)/VanderPolOscillator"
+    file = file_loc/"policies/control.npy"  
     time_horizon = 10
     n_steps_per_second = 20
     init = np.asarray([2, 0])
 
     control = np.load(file).flatten()
-    control = [0.33999999999999986, 1.9, 0.14000000000000012, 0.28000000000000025, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    
+    # control = np.array([0.33999999999999986, 1.9, 0.14000000000000012, 0.28000000000000025, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+
     total_n_steps = n_steps_per_second*time_horizon
     T = np.linspace(0, time_horizon, total_n_steps)
     Y = np.zeros((total_n_steps, 2))
