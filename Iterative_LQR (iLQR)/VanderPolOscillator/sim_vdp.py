@@ -47,8 +47,8 @@ class SimulateVDP:
             y[i,:] = np.array([y1, y2])
         return y
 
-    def simulate(self, y_init = np.array([2.0,0.0]), horizon=1, n_per_step = 20, u = np.array([0.0])):
-        if len(u)!=horizon:
+    def simulate(self, y_init = np.array([2.0,0.0]), u = np.array([0.0]), horizon=1, n_per_step = 20):
+        if u.shape[0] !=horizon:
             u = np.zeros([horizon])
         total_steps = horizon*n_per_step
         self.T = np.linspace(0, horizon, total_steps)
@@ -83,15 +83,19 @@ if __name__ == '__main__':
     
 
     mu, nx, nu = 2, 2, 1
-    
+    y_init = np.array([2.0,0.0])
+
     time_horizon = 1
     control = np.array([0.0])
 
-    # time_horizon = 10
-    # control = np.array([0.33999999999999986, 1.9, 0.14000000000000012, 0.28000000000000025, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    time_horizon = 10
+    control = np.array([0.33999999999999986, 1.9, 0.14000000000000012, 0.28000000000000025, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     # control = np.load(file).flatten()
     # control = np.zeros((time_horizon))
 
     sim_module = SimulateVDP(mu, nx, nu)
-    sim_module.simulate(horizon=time_horizon, u = control)
+    sim_module.simulate(u=control, horizon=time_horizon)
+    # sim_module.simulate(y_init, control)
     sim_module.draw_figure()
+
+    
