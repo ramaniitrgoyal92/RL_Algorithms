@@ -19,10 +19,11 @@ from pathlib import Path
 
 class SimulateVDP:
 
-    def __init__(self,mu,nx,nu):
+    def __init__(self,mu,nx,nu,dt):
         self.mu = mu
         self.nx = nx
         self.nu = nu
+        self.dt = dt
 
     def vanderpol(self,y,u):
         """ Return the derivative vector for the van der Pol equations."""
@@ -32,8 +33,8 @@ class SimulateVDP:
         dy2=self.mu*(1-y1**2)*y2-y1+u
         return dy1, dy2
     
-    def onestep_rk4(self,y_init = np.array([2.0,0.0]), n_per_step = 20, u = 0):
-        h = 1/n_per_step
+    def onestep_rk4(self,y_init, n_per_step, u = 0):
+        h = self.dt/n_per_step
         y1 = y_init[0]
         y2 = y_init[1]
         y = np.zeros((n_per_step,self.nx))
@@ -59,7 +60,7 @@ class SimulateVDP:
             y_init = y[-1]
         return self.Y
     
-    def draw_figure(self):
+    def draw_figure(self, save_to_path=None):
         plt.subplot(2,2,1)
         plt.plot(self.T, self.Y[:,0],'-ob')
         plt.title("Time Profile of y1")
@@ -72,6 +73,8 @@ class SimulateVDP:
         plt.subplot2grid((2,2),(0,1),rowspan=2)
         plt.plot(self.Y[:,0], self.Y[:,1],'-ok')
         plt.title("Phase Portrait")
+        if save_to_path is not None:
+            plt.savefig(save_to_path, format='png')
         plt.show()
 
 
@@ -82,18 +85,18 @@ if __name__ == '__main__':
     file = file_loc/"policies/control.npy"
     
 
-    mu, nx, nu = 2, 2, 1
+    mu, nx, nu, dt = 2, 2, 1, 1
     y_init = np.array([2.0,0.0])
 
-    time_horizon = 1
-    control = np.array([0.0])
+    # time_horizon = 1
+    # control = np.array([0.0])
 
     time_horizon = 10
     control = np.array([0.33999999999999986, 1.9, 0.14000000000000012, 0.28000000000000025, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     # control = np.load(file).flatten()
     # control = np.zeros((time_horizon))
 
-    sim_module = SimulateVDP(mu, nx, nu)
+    sim_module = SimulateVDP(mu, nx, nu, dt)
     sim_module.simulate(u=control, horizon=time_horizon)
     # sim_module.simulate(y_init, control)
     sim_module.draw_figure()

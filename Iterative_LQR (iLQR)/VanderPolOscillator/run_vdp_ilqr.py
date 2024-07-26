@@ -16,15 +16,16 @@ from vdp_params import *
 
 class RunVdp(iLQR,LTV_SysID,SimulateVDP):
 
-    def __init__(self, mu, state_dimension, control_dimension, alpha, horizon, init_state, final_state, Q, Q_final, R):
+    def __init__(self, mu, state_dimension, control_dimension, dt, horizon, init_state, final_state, Q, Q_final, R, alpha, nominal_init_stddev):
 
         self.Q = Q
         self.R = R
         self.Q_final = Q_final
+        self.nominal_init_stddev = nominal_init_stddev
         
         iLQR.__init__(self, None, state_dimension, control_dimension, alpha, horizon, init_state, final_state)
-        LTV_SysID.__init__(self, None, state_dimension, control_dimension, n_samples=500, pert_sigma = 1e-7)
-        SimulateVDP.__init__(self, mu, state_dimension, control_dimension)
+        LTV_SysID.__init__(self, None, state_dimension, control_dimension, n_samples=100, pert_sigma = 1e-7)
+        SimulateVDP.__init__(self, mu, state_dimension, control_dimension, dt)
 
     def forward_simulate(self,x,u):
         return self.simulate(x, u)[-1]
@@ -35,30 +36,35 @@ if __name__=="__main__":
     path_to_vdp = Path(cwd)/"Iterative_LQR (iLQR)/VanderPolOscillator"
     MODEL = path_to_vdp/"models/None.xml"
 
-    path_to_export = path_to_vdp/"VDP_Experiments/exp_2"
-    path_to_file = path_to_export/"vdp_policy_0.txt"
-    training_cost_data_file = path_to_export / "training_cost_data.txt"
-    path_to_data = path_to_export / "vdp_D2C_DDP_data.txt"
+    path_to_export = path_to_vdp/"VDP_Experiments/exp_3"
+    path_to_policy_file = path_to_export/"vdp_policy.txt"
+    path_to_cost_file = path_to_export / "training_cost_data.txt"
+    path_to_training_cost_fig = path_to_export/"episodic_cost_training.png"
+    path_to_traj_fig = path_to_export/"optimal_traj.png"
+    # path_to_data = path_to_export / "vdp_D2C_data.txt"
 
     init_state = np.zeros((state_dimension,1))
-    init_state[0] = 2
+    init_state[0] = .02
     final_state = np.zeros((state_dimension, 1))
 
     print('Initial phase : \n', init_state)
     print('Goal phase : \n', final_state)
 	
     # No. of ILQR iterations to run
-    n_iterations = 60
+    n_iterations = 20
 
-    model = RunVdp(mu, state_dimension, control_dimension, alpha, horizon, init_state, final_state, Q, Q_final, R)
+    model = RunVdp(mu, state_dimension, control_dimension, dt, horizon, init_state, final_state, Q, Q_final, R, alpha,nominal_init_stddev)
     model.iterate_ilqr(n_iterations)
+    model.plot_episodic_cost_history(path_to_training_cost_fig)
+    model.save_policy(path_to_policy_file)
+    model.save_cost(path_to_cost_file)
+
+    #Check and Simulate the obtained policy
+    model.simulate(y_init = init_state.flatten(), u = model.U.flatten(), horizon = horizon)
+    model.draw_figure(path_to_traj_fig)
 
     # Test sys_id
-    # x_t = np.array([2.0,0.0]).reshape(state_dimension,1)
-    # u_t = np.array([0]).reshape(control_dimension,1)
-    # AB = model.sys_id(x_t,u_t)
-    # print(AB)
-
-    #Test Simulate
-    '''model.simulate()
-    model.draw_figure()'''
+    """ x_t = np.array([2.0,0.0]).reshape(state_dimension,1)
+    u_t = np.array([0]).reshape(control_dimension,1)
+    AB = model.sys_id(x_t,u_t)
+    print(AB) """

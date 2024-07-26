@@ -1,3 +1,0 @@
-D2C training performed for the required control task:
-
--------------------------------------------------------------
