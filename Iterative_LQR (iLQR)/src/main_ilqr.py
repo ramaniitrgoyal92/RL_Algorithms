@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 
-from ltv_sys_id import LTV_SysID
+# from ltv_sys_id import LTV_SysID
 from progressbar import *
 
 class iLQR:
@@ -20,7 +20,7 @@ class iLQR:
         
         self.mu = 1e-3
         self.mu_min = 1e-3
-        self.mu_max = (10)**6
+        self.mu_max = (10)**8
         self.delta_0 = 2
         self.delta = self.delta_0
         self.J_change_eps = -6e-1
@@ -174,10 +174,10 @@ class iLQR:
         for t in range(self.N):
             if t==0:
                 self.U[t] = self.U_temp[t] + self.alpha*self.k[t]
-                self.X[t] = self.forward_simulate(self.X_0.flatten(),self.U[t].flatten()).reshape(np.shape(self.X_0))
+                self.X[t] = self.simulate(self.X_0.flatten(),self.U[t].flatten()).reshape(np.shape(self.X_0))
             else:
                 self.U[t] = self.U_temp[t] + self.alpha*self.k[t] + (self.K[t] @ (self.X[t-1] - self.X_temp[t-1]))
-                self.X[t] = self.forward_simulate(self.X[t-1].flatten(),self.U[t].flatten()).reshape(np.shape(self.X_0))
+                self.X[t] = self.simulate(self.X[t-1].flatten(),self.U[t].flatten()).reshape(np.shape(self.X_0))
 
 
 

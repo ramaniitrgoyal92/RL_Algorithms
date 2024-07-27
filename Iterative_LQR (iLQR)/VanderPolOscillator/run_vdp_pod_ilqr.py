@@ -9,26 +9,31 @@ from pathlib import Path
 src_path = Path(__file__).resolve().parent.parent / 'src'
 sys.path.append(str(src_path))
 
-from main_ilqr import iLQR
-from ltv_sys_id import LTV_SysID
 from sim_vdp import SimulateVDP
+from main_pod_ilqr import POD_iLQR
+from arma_ltv_sys_id import ARMA_LTV_SysID
 from vdp_params import *
 
-class RunVdp(iLQR,LTV_SysID,SimulateVDP):
-
-    def __init__(self, mu, state_dimension, control_dimension, dt, horizon, init_state, final_state, Q, Q_final, R, alpha, nominal_init_stddev):
-
+class RunPodVdp(POD_iLQR,ARMA_LTV_SysID,SimulateVDP):
+    def __init__(self, mu, state_dimension, control_dimension, dt, horizon, init_state, final_state, Q, Q_final, R, alpha, nominal_init_stddev, C):
         self.Q = Q
         self.R = R
         self.Q_final = Q_final
         self.nominal_init_stddev = nominal_init_stddev
         
-        iLQR.__init__(self, None, state_dimension, control_dimension, alpha, horizon, init_state, final_state)
-        LTV_SysID.__init__(self, None, state_dimension, control_dimension, n_samples=100, pert_sigma = 1e-7)
+        self.C = C
+        n_z = C.shape[0]
+
+        POD_iLQR.__init__(self, None, state_dimension, control_dimension, alpha, horizon, init_state, final_state, n_z, q, q_u)
+        ARMA_LTV_SysID.__init__(self, None, state_dimension, control_dimension, n_z, n_samples=500, pert_sigma = 1e-7)
         SimulateVDP.__init__(self, mu, state_dimension, control_dimension, dt)
 
-    def simulate(self,x,u):
+    def simulate(self,x,u,part_obs_flag=False):
+        if not part_obs_flag:
             return self.simulate_vdp(x, u)[-1]
+        else:
+            return self.C*self.simulate_vdp(x, u)[-1]
+
 
 
 if __name__=="__main__":
@@ -52,8 +57,9 @@ if __name__=="__main__":
 	
     # No. of ILQR iterations to run
     n_iterations = 20
+    C = np.array([1.0, 0])
 
-    model = RunVdp(mu, state_dimension, control_dimension, dt, horizon, init_state, final_state, Q, Q_final, R, alpha,nominal_init_stddev)
+    model = RunPodVdp(mu, state_dimension, control_dimension, dt, horizon, init_state, final_state, Q, Q_final, R, alpha, nominal_init_stddev, C)
     model.iterate_ilqr(n_iterations)
     model.plot_episodic_cost_history(path_to_training_cost_fig)
     model.save_policy(path_to_policy_file)

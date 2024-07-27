@@ -48,7 +48,7 @@ class SimulateVDP:
             y[i,:] = np.array([y1, y2])
         return y
 
-    def simulate(self, y_init = np.array([2.0,0.0]), u = np.array([0.0]), horizon=1, n_per_step = 20):
+    def simulate_vdp(self, y_init = np.array([2.0,0.0]), u = np.array([0.0]), horizon=1, n_per_step = 20):
         if u.shape[0] !=horizon:
             u = np.zeros([horizon])
         total_steps = horizon*n_per_step
@@ -97,8 +97,8 @@ if __name__ == '__main__':
     # control = np.zeros((time_horizon))
 
     sim_module = SimulateVDP(mu, nx, nu, dt)
-    sim_module.simulate(u=control, horizon=time_horizon)
-    # sim_module.simulate(y_init, control)
+    sim_module.simulate_vdp(u=control, horizon=time_horizon)
+    # sim_module.simulate_vdp(y_init, control)
     sim_module.draw_figure()
 
     
