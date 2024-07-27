@@ -6,10 +6,8 @@ class LTV_SysID:
     def __init__(self, MODEL, n_x, n_u, n_samples=500, pert_sigma = 1e-7):
         self. n_x = n_x
         self.n_u = n_u
-        self.n_samples = n_samples
-
-        # Standard deviation of the perturbation 
-        self.sigma = pert_sigma
+        self.n_samples = n_samples      
+        self.sigma = pert_sigma # Standard deviation of the perturbation 
 
     def sys_id(self, x_t, u_t):
         '''
@@ -41,7 +39,7 @@ class LTV_SysID:
         '''
         X_next = np.zeros((X.shape[0], self.nx))
         for i in range(X.shape[0]):
-            X_next[i,:] = self.forward_simulate(X[i],U[i])
+            X_next[i,:] = self.simulate(X[i],U[i])
 
         return X_next
 

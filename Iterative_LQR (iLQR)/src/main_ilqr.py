@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 
-from ltv_sys_id import LTV_SysID
+# from ltv_sys_id import LTV_SysID
 from progressbar import *
 
 class iLQR:
@@ -20,7 +20,7 @@ class iLQR:
         
         self.mu = 1e-3
         self.mu_min = 1e-3
-        self.mu_max = (10)**6
+        self.mu_max = (10)**8
         self.delta_0 = 2
         self.delta = self.delta_0
         self.J_change_eps = -6e-1
@@ -174,10 +174,10 @@ class iLQR:
         for t in range(self.N):
             if t==0:
                 self.U[t] = self.U_temp[t] + self.alpha*self.k[t]
-                self.X[t] = self.forward_simulate(self.X_0.flatten(),self.U[t].flatten()).reshape(np.shape(self.X_0))
+                self.X[t] = self.simulate(self.X_0.flatten(),self.U[t].flatten()).reshape(np.shape(self.X_0))
             else:
                 self.U[t] = self.U_temp[t] + self.alpha*self.k[t] + (self.K[t] @ (self.X[t-1] - self.X_temp[t-1]))
-                self.X[t] = self.forward_simulate(self.X[t-1].flatten(),self.U[t].flatten()).reshape(np.shape(self.X_0))
+                self.X[t] = self.simulate(self.X[t-1].flatten(),self.U[t].flatten()).reshape(np.shape(self.X_0))
 
 
 
@@ -197,8 +197,18 @@ class iLQR:
 
 
     def initialize_traj(self,u_init):
-        pass
+        for t in range(0, self.N):
+            if u_init is None:
+                self.U[t, :] = np.random.normal(0, self.nominal_init_stddev, (self.n_u, 1))	#np.random.normal(0, 0.01, self.n_u).reshape(self.n_u,1)#DM(array[t, 4:6])
+            else:
+                self.U[t, :] = u_init[t,:]
 
+        self.U_temp = self.U
+        
+        self.forward_pass_simulate()
+        
+        self.X_temp = self.X
+        
     def forward_simulate(self):
         pass
     
@@ -234,8 +244,8 @@ class iLQR:
     def l_x_N(self,x):
         return 2*self.Q_final @ (x - self.X_N)
 
-    def plot_episodic_cost_history(self,episodic_cost_history,save_to_path=None):
-        data = np.array(episodic_cost_history).flatten()
+    def plot_episodic_cost_history(self,save_to_path=None):
+        data = np.array(self.episodic_cost_history).flatten()
         plt.figure(figsize=(7, 5))
         plt.plot(data, linewidth=2)
         plt.xlabel('Training iteration count', fontweight="bold", fontsize=12)
@@ -264,3 +274,9 @@ class iLQR:
 
         with open(path_to_file, 'w') as outfile:
             json.dump(Pi,outfile)
+
+    def save_cost(self,path_to_file):
+        data = {}
+        data['cost'] = np.array(self.episodic_cost_history).flatten().tolist()
+        with open(path_to_file, 'w') as outfile:
+            json.dump(data,outfile)
