@@ -2,7 +2,7 @@ import numpy as np
 import math
 from main_ilqr import iLQR
 
-class Main_POD_iLQR(iLQR):
+class POD_iLQR(iLQR):
 
     def __init__(self, MODEL, n_x, n_u, alpha, horizon, init_state, final_state, n_z, q, q_u):
         self.n_z = n_z
@@ -85,8 +85,8 @@ class Main_POD_iLQR(iLQR):
         Q_uz = (F_u[t].T) @ ((V_zz[t] + self.mu*np.eye(V_zz[t].shape[0])) @ F_x[t])
         Q_uu = 2*self.R + (F_u[t].T) @ ((V_zz[t] + self.mu*np.eye(V_zz[t].shape[0])) @ F_u[t])
 
-        return Q_x, Q_u, Q_xx, Q_uu, Q_ux
-    
+        return Q_z, Q_u, Q_zz, Q_uu, Q_uz
+        
     
 
 			

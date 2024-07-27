@@ -204,13 +204,13 @@ class iLQR:
                 self.U[t, :] = u_init[t,:]
 
         self.U_temp = self.U
-        
         self.forward_pass_simulate()
-        
         self.X_temp = self.X
+
         
     def forward_simulate(self):
         pass
+    
     
     def calculate_total_cost(self,init_state, state_traj, control_traj, horizon):
         total_cost = 0
