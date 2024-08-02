@@ -35,7 +35,6 @@ class RunPodVdp(POD_iLQR,ARMA_LTV_SysID,SimulateVDP):
             return self.C*self.simulate_vdp(x, u)[-1]
 
 
-
 if __name__=="__main__":
     cwd = os.getcwd()
     path_to_vdp = Path(cwd)/"Iterative_LQR (iLQR)/VanderPolOscillator"
