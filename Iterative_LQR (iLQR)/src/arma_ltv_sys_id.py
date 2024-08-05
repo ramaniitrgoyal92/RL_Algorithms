@@ -40,13 +40,12 @@ class ARMA_LTV_SysID(LTV_SysID):
 		# 		X[:, i+1] = simulate(None, X[:,i], ctrl).reshape(n_x,)
 		# 		delta_z[j, n_z*(N-i)+1:n_z*(N-i+1)+1] = (C @ X[:,i+1]) - Z_norm[:,i+1]
 
-
         u_max = np.max(abs(u_nom))
         U_ = 0.1*u_max*np.random.normal(0, self.sigma, (self.n_samples, n_u*(N+1)))
         
         delta_z = np.zeros((self.n_samples, n_z*(N+1)))
-        X = np.zeros((n_x, N+1))
         
+        X = np.zeros((n_x, N+1))
         ctrl = np.zeros((n_u, 1))
 
         # Generating delta_z for all rollouts
@@ -54,6 +53,7 @@ class ARMA_LTV_SysID(LTV_SysID):
             X[:,0] = self.X_0.reshape((n_x,))
             for i in range(N):
                 ctrl[:] = u_nom[i] + U_ [j, n_u*(N-i):n_u*(N-i+1)].reshape(np.shape(u_nom[i]))
+                forward_simulate(self.X_0.flatten(),self.U[t].flatten()).reshape(np.shape(self.X_0))
                 X[:, i+1] = self.simulate(None, X[:,i], ctrl).reshape(n_x,)
 
                 testsum1 = np.sum(X[:, i+1])
