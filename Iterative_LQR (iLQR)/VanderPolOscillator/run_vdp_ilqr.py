@@ -38,6 +38,7 @@ class RunVdp(iLQR,LTV_SysID,SimulateVDP):
 
 
 if __name__=="__main__":
+
     cwd = os.getcwd()
     path_to_vdp = Path(cwd)/"Iterative_LQR (iLQR)/VanderPolOscillator"
     MODEL = path_to_vdp/"models/None.xml"
@@ -57,10 +58,11 @@ if __name__=="__main__":
     print('Goal phase : \n', final_state)
 	
     # No. of ILQR iterations to run
-    n_iterations = 20
+    n_iterations = 10
 
     model = RunVdp(mu, state_dimension, control_dimension, dt, horizon, init_state, final_state, Q, Q_final, R, alpha,nominal_init_stddev)
     model.iterate_ilqr(n_iterations)
+
     model.plot_episodic_cost_history(path_to_training_cost_fig)
     model.save_policy(path_to_policy_file)
     model.save_cost(path_to_cost_file)
