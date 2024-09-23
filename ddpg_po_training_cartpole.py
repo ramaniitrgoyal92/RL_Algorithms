@@ -17,9 +17,9 @@ import csv
 from noise_injector import OrnsteinUhlenbeckActionNoise
 
 ENV_NAME = 'InvertedPendulum-v4'
-csv_file = 'cartpole_po_output.csv' #csv file to store training progress
+csv_file = 'models/ddpg_po/cartpole_po_output.csv' #csv file to store training progress
 exp_name = 'carpole_test_po_q_10'
-run_name = 'test_po'
+run_name = 'ddpg_po'
 
 q = 10 # number of time history required. 
 nx = 4 #dim of state
@@ -81,9 +81,9 @@ def make_env(env_id, render_bool):
 
     if render_bool:
 
-        env = gym.make('InvertedPendulum-v4',render_mode = "human")
+        env = gym.make(env_id,render_mode = "human")
     else:
-        env = gym.make('InvertedPendulum-v4')
+        env = gym.make(env_id)
 
     min_action = -20
     max_action = 20
@@ -123,8 +123,8 @@ if __name__ == "__main__":
     given_seed = 1
     buffer_size = int(1e6)
     batch_size = 256
-    total_timesteps = 200000 #default = 1000000
-    learning_starts = 25000 #default = 25e3
+    total_timesteps = 200#000 #default = 1000000
+    learning_starts = 25#000 #default = 25e3
     episode_length = 200
     exploration_noise = 0.001
     policy_frequency = 2
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     qf1 = QNetwork(env).to(device)
     
     # load pretrained model.
-    checkpoint = torch.load(f"runs/{run_name}/{exp_name}.pth")
+    checkpoint = torch.load(f"models/{run_name}/{exp_name}.pth", map_location=torch.device('cpu'))
     actor.load_state_dict(checkpoint[0])
     qf1.load_state_dict(checkpoint[1])
 
@@ -285,7 +285,7 @@ if __name__ == "__main__":
 
     save_model = True
     if save_model:
-        model_path = f"runs/{run_name}/{exp_name}.pth"
+        model_path = f"models/{run_name}/{exp_name}.pth"
         torch.save((actor.state_dict(), qf1.state_dict()), model_path)
         print(f"model saved to {model_path}")
 

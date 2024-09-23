@@ -13,6 +13,7 @@ ENV_NAME = 'InvertedPendulum-v4'
 csv_file = 'sac_cartpole_output.csv' #csv file to store training progress
 exp_name = 'sac_cartpole_ep_120'
 run_name = 'sac'
+record_video_bool = False
 
 class SoftQNetwork(nn.Module):
     def __init__(self, env):
@@ -79,14 +80,14 @@ class Actor(nn.Module):
 def make_env(env_id, render_bool, record_video=False):
 
     if record_video:
-        env = gym.make('InvertedPendulum-v4',render_mode = "rgb_array")
-        env = gym.wrappers.RecordVideo(env, f"../videos/{run_name}")
+        env = gym.make(env_id,render_mode = "rgb_array")
+        env = gym.wrappers.RecordVideo(env, f"models/{run_name}/{exp_name}")
 
     elif render_bool: 
-        env = gym.make('InvertedPendulum-v4',render_mode = "human")
+        env = gym.make(env_id,render_mode = "human")
 
     else:
-        env = gym.make('InvertedPendulum-v4')
+        env = gym.make(env_id)
 
     min_action = -20
     max_action = 20
@@ -113,12 +114,12 @@ if __name__ == "__main__":
 
     print(f"Using {device}")
 
-    env = make_env(ENV_NAME, render_bool = True, record_video=True)
+    env = make_env(ENV_NAME, render_bool = True, record_video=record_video_bool)
     assert isinstance(env.action_space, gym.spaces.Box), "only continuous action space is supported"
 
     actor = Actor(env).to(device)
     qf1 = SoftQNetwork(env).to(device)
-    checkpoint = torch.load(f"../runs/{run_name}/{exp_name}.pth")
+    checkpoint = torch.load(f"models/{run_name}/{exp_name}.pth")
     actor.load_state_dict(checkpoint[0])
     qf1.load_state_dict(checkpoint[1])
 

@@ -22,9 +22,9 @@ run_name = 'sac'
 class SoftQNetwork(nn.Module):
     def __init__(self, env):
         super().__init__()
-        self.fc1 = nn.Linear(np.array(env.observation_space.shape).prod() + np.prod(env.action_space.shape), 256)
-        self.fc2 = nn.Linear(256, 256)
-        self.fc3 = nn.Linear(256, 1)
+        self.fc1 = nn.Linear(np.array(env.observation_space.shape).prod() + np.prod(env.action_space.shape), 512)
+        self.fc2 = nn.Linear(512, 512)
+        self.fc3 = nn.Linear(512, 1)
 
     def forward(self, x, a):
         x = torch.cat([x, a], 1)
@@ -41,10 +41,10 @@ LOG_STD_MIN = -5
 class Actor(nn.Module):
     def __init__(self, env):
         super().__init__()
-        self.fc1 = nn.Linear(np.array(env.observation_space.shape).prod(), 256)
-        self.fc2 = nn.Linear(256, 256)
-        self.fc_mean = nn.Linear(256, np.prod(env.action_space.shape))
-        self.fc_logstd = nn.Linear(256, np.prod(env.action_space.shape))
+        self.fc1 = nn.Linear(np.array(env.observation_space.shape).prod(), 512)
+        self.fc2 = nn.Linear(512, 512)
+        self.fc_mean = nn.Linear(512, np.prod(env.action_space.shape))
+        self.fc_logstd = nn.Linear(512, np.prod(env.action_space.shape))
         # action rescaling
         self.register_buffer(
             "action_scale", torch.tensor((env.action_space.high - env.action_space.low) / 2.0, dtype=torch.float32)
@@ -80,7 +80,7 @@ class Actor(nn.Module):
 
 def reward_function(observation, action):
     diag_q = [1,10,1,1]; 
-    r = 1;
+    r = 1
     #print("observation:", observation)
     #print("observation:", observation[0,1])
     cost = diag_q[0]*(observation[0]**2) + diag_q[1]*(observation[1]**2) +\
@@ -93,9 +93,9 @@ def make_env(env_id, render_bool):
 
     if render_bool:
 
-        env = gym.make('InvertedPendulum-v4',render_mode = "human")
+        env = gym.make(env_id,render_mode = "human")
     else:
-        env = gym.make('InvertedPendulum-v4')
+        env = gym.make(env_id)
 
     min_action = -20
     max_action = 20
@@ -123,8 +123,8 @@ if __name__ == "__main__":
     given_seed = 1
     buffer_size = int(1e6)
     batch_size = 256
-    total_timesteps = 500000 #default = 1000000
-    learning_starts = 25000 #default = 25e3
+    total_timesteps = 100#000 #default = 1000000
+    learning_starts = 25#000 #default = 25e3
     episode_length = 120
     exploration_noise = 0.001
     policy_frequency = 2
@@ -156,10 +156,10 @@ if __name__ == "__main__":
     qf2 = SoftQNetwork(env).to(device)
 
     # load pretrained model.
-    #checkpoint = torch.load(f"../runs/{run_name}/{exp_name}.pth")
-    # actor.load_state_dict(checkpoint[0])
-    # qf1.load_state_dict(checkpoint[1])
-    # qf2.load_state_dict(checkpoint[2])
+    checkpoint = torch.load(f"models/{run_name}/{exp_name}.pth", map_location=torch.device('cpu'))
+    actor.load_state_dict(checkpoint[0])
+    qf1.load_state_dict(checkpoint[1])
+    qf2.load_state_dict(checkpoint[2])
 
     #target network 
     qf1_target = SoftQNetwork(env).to(device)
@@ -285,7 +285,7 @@ if __name__ == "__main__":
 
     save_model = True
     if save_model:
-        model_path = f"../runs/{run_name}/{exp_name}.pth"
+        model_path = f"models/{run_name}/{exp_name}.pth"
         torch.save((actor.state_dict(), qf1.state_dict(), qf2.state_dict()), model_path)
         print(f"model saved to {model_path}")
 
