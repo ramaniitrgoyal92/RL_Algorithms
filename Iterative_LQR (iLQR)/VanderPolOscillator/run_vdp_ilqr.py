@@ -28,9 +28,9 @@ class RunVdp(iLQR,LTV_SysID,SimulateVDP):
         SimulateVDP.__init__(self, mu, state_dimension, control_dimension, dt)
 
         # Initialize parent classes
-        super().__init__(None, state_dimension, control_dimension, alpha, horizon, init_state, final_state)
-        super(iLQR, self).__init__(None, state_dimension, control_dimension, n_samples=100, pert_sigma=1e-7)
-        super(LTV_SysID, self).__init__(mu, state_dimension, control_dimension, dt)
+        # super().__init__(None, state_dimension, control_dimension, alpha, horizon, init_state, final_state)
+        # super(iLQR, self).__init__(None, state_dimension, control_dimension, n_samples=100, pert_sigma=1e-7)
+        # super(LTV_SysID, self).__init__(mu, state_dimension, control_dimension, dt)
 
 
     def simulate(self,x,u):

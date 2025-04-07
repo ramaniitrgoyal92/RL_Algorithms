@@ -10,14 +10,14 @@ import torch.nn.functional as F
 
 
 ENV_NAME = 'InvertedPendulum-v4'
-exp_name = 'cartpole_ep_200'
-run_name = 'test'
+exp_name = 'cartpole_ep_30'
+run_name = 'ddpg'
 
 def make_env(env_id, render_bool, record_video=False):
 
     if record_video:
         env = gym.make('InvertedPendulum-v4',render_mode = "rgb_array")
-        env = gym.wrappers.RecordVideo(env, f"../videos/{run_name}")
+        env = gym.wrappers.RecordVideo(env, f"models/{run_name}/{exp_name}")
 
     elif render_bool: 
         env = gym.make('InvertedPendulum-v4',render_mode = "human")
@@ -86,12 +86,12 @@ if __name__ == "__main__":
 
     print(f"Using {device}")
 
-    env = make_env(ENV_NAME, render_bool = True, record_video=True)
+    env = make_env(ENV_NAME, render_bool = True, record_video=False)
     assert isinstance(env.action_space, gym.spaces.Box), "only continuous action space is supported"
 
     actor = Actor(env).to(device)
     qf1 = QNetwork(env).to(device)
-    checkpoint = torch.load(f"../runs/{run_name}/{exp_name}.pth")
+    checkpoint = torch.load(f"models/{run_name}/{exp_name}.pth")
     actor.load_state_dict(checkpoint[0])
     qf1.load_state_dict(checkpoint[1])
 

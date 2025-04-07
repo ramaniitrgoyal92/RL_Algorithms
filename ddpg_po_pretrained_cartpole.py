@@ -11,8 +11,8 @@ import torch.nn.functional as F
 
 ENV_NAME = 'InvertedPendulum-v4'
 exp_name = 'carpole_test_po_q_2_nz_2'
-run_name = 'test_po'
-record_video_bool = True
+run_name = 'ddpg_po'
+record_video_bool = False
 
 q = 2 # number of time history required. 
 nx = 4 #dim of state
@@ -62,14 +62,14 @@ class Actor(nn.Module):
 def make_env(env_id, render_bool, record_video=False):
 
     if record_video:
-        env = gym.make('InvertedPendulum-v4',render_mode = "rgb_array")
-        env = gym.wrappers.RecordVideo(env, f"../videos/{run_name}", name_prefix= exp_name)
+        env = gym.make(env_id,render_mode = "rgb_array")
+        env = gym.wrappers.RecordVideo(env, f"models/{run_name}/{exp_name}")
 
     elif render_bool: 
-        env = gym.make('InvertedPendulum-v4',render_mode = "human")
+        env = gym.make(env_id,render_mode = "human")
 
     else:
-        env = gym.make('InvertedPendulum-v4')
+        env = gym.make(env_id)
 
     min_action = -20
     max_action = 20
@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
     actor = Actor(env).to(device)
     qf1 = QNetwork(env).to(device)
-    checkpoint = torch.load(f"../runs/{run_name}/{exp_name}.pth")
+    checkpoint = torch.load(f"models/{run_name}/{exp_name}.pth", map_location=torch.device('cpu'))
     actor.load_state_dict(checkpoint[0])
     qf1.load_state_dict(checkpoint[1])
 
