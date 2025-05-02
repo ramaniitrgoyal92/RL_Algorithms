@@ -106,7 +106,6 @@ def make_env(env_id, render_bool):
 
 def write_data_csv(data):
     
-
     # Write the data to a CSV file
     with open(csv_file, mode='a', newline='') as file:
         writer = csv.writer(file)
@@ -126,10 +125,9 @@ if __name__ == "__main__":
     total_timesteps = 100#000 #default = 1000000
     learning_starts = 25#000 #default = 25e3
     episode_length = 120
-    exploration_noise = 0.001
     policy_frequency = 2
     tau = 0.005 # weight to update the target network
-    gamma = 0.99 #discount factor
+    gamma = 0.99 # discount factor
     learning_rate = 3e-5
     alpha = 0.2 #Entropy regularization coefficient
     target_network_frequency = 1
@@ -144,7 +142,7 @@ if __name__ == "__main__":
     # if GPU is to be used
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    print(f"Using {device}");
+    print(f"Using {device}")
 
     env = make_env(ENV_NAME, render_bool = False)
     
@@ -172,6 +170,12 @@ if __name__ == "__main__":
     #choose optimizer
     q_optimizer = optim.Adam(list(qf1.parameters()) + list(qf2.parameters()), lr=learning_rate)
     actor_optimizer = optim.Adam(list(actor.parameters()), lr=learning_rate)
+
+    # For dynamic alpha
+    target_entropy = -np.prod(env.action_space.shape).item()  # e.g., -action_dim
+    log_alpha = torch.tensor(0.0, requires_grad=True, device=device)
+    alpha_optimizer = optim.Adam([log_alpha], lr=3e-4)
+
 
     #experience replay buffer
     env.observation_space.dtype = np.float32
@@ -256,6 +260,17 @@ if __name__ == "__main__":
                     actor_optimizer.zero_grad()
                     actor_loss.backward()
                     actor_optimizer.step()
+
+                # Compute alpha loss - α adapts over time, increasing if exploration is too low (high log_prob), or decreasing if it's too random.
+                alpha_loss = -(log_alpha * (log_pi + target_entropy).detach()).mean()
+
+                # Update alpha
+                alpha_optimizer.zero_grad()
+                alpha_loss.backward()
+                alpha_optimizer.step()
+                
+                # Get current alpha
+                alpha = log_alpha.exp()
 
                 print(f'step= {global_step} rewards= {rewards} qf_loss = {qf_loss.item()} '
                         f'actor_loss = {actor_loss.item()} observations= {obs} action= {actions}')
