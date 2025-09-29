@@ -34,7 +34,7 @@ class RunVdp(iLQR,LTV_SysID,SimulateVDP):
 
 
     def simulate(self,x,u):
-            return self.simulate_vdp(x, u)[-1]
+        return self.simulate_vdp(x, u)[-1]
 
 
 if __name__=="__main__":

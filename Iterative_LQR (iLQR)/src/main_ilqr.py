@@ -50,14 +50,12 @@ class iLQR:
 		# Initialize the trajectory with the desired initial guess
         self.initialize_traj(u_init=u_init)
 
-
         # Start the iLQR iterations
         for i in self.pbar(range(n_iter)):
             backward_pass_flag, del_J_alpha = self.backward_pass()
 
             if backward_pass_flag:
                 self.dec_reg_mu()
-
                 forward_pass_flag = self.forward_pass(del_J_alpha)
 
                 if not forward_pass_flag:

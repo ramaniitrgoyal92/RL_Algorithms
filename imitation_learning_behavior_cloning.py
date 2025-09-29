@@ -50,7 +50,6 @@ num_interactions = int(1e4)
 if isinstance(env.action_space, gym.spaces.Box):
     expert_observations = np.empty((num_interactions,) + env.observation_space.shape)
     expert_actions = np.empty((num_interactions,) + (env.action_space.shape[0],))
-
 else:
     expert_observations = np.empty((num_interactions,) + env.observation_space.shape)
     expert_actions = np.empty((num_interactions,) + env.action_space.shape)
