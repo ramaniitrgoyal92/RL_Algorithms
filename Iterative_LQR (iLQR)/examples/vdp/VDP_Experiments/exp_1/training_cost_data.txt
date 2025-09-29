@@ -1,0 +1,1 @@
+{"cost": [87152.74775995211, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN]}

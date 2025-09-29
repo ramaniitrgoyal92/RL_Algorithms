@@ -2,18 +2,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 
-# from ltv_sys_id import LTV_SysID
 from progressbar import *
 
 class iLQR:
 
-    def __init__(self,MODEL, n_x, n_u, alpha, horizon, init_state, final_state):
+    def __init__(self, MODEL, n_x, n_u, alpha, horizon, init_state, final_state, Q, Q_final, R, nominal_init_stddev, n_sys_id_samples, pert_sys_id_sigma, arma_sys_id_flag = False):
+        self.model = MODEL
         self.X_0 = init_state
         self.X_N = final_state
         self.N = horizon        
         self.n_x = n_x
         self.n_u = n_u
         self.alpha = alpha
+        self.Q = Q
+        self.Q_final = Q_final  
+        self.R = R
+        self.nominal_init_stddev = nominal_init_stddev
+        if arma_sys_id_flag:
+            from arma_ltv_sys_id import ARMA_LTV_SysID
+            self.ltv_sys_id = ARMA_LTV_SysID(self.model, n_x, n_u, n_z=n_x, n_samples = n_sys_id_samples, pert_sigma = pert_sys_id_sigma)
+        else:
+            from ltv_sys_id import LTV_SysID
+            self.ltv_sys_id = LTV_SysID(self.model, n_x, n_u, n_samples = n_sys_id_samples, pert_sigma = pert_sys_id_sigma)
 
         widgets = [Percentage(), '   ', ETA(), ' (', Timer(), ')']
         self.pbar = ProgressBar(widgets=widgets)
@@ -59,7 +69,6 @@ class iLQR:
                 forward_pass_flag = self.forward_pass(del_J_alpha)
 
                 if not forward_pass_flag:
-
                     while not forward_pass_flag:
                         # simulated annealing
                         self.alpha = self.alpha*0.99
@@ -90,12 +99,21 @@ class iLQR:
         # Initialize before forward pass
         del_J_alpha = 0
 
+        Fx_Fu = self.ltv_sys_id.traj_sys_id_state_pertb(self.X[0:], self.U)
+
         for t in range(self.N-1, -1, -1):
+            F_x = Fx_Fu[t][:,:self.n_x]
+            F_u = Fx_Fu[t][:,self.n_x:]
             if t>0:
-                Q_x, Q_u, Q_xx, Q_uu, Q_ux = self.get_gradients(self.X[t-1],self.U[t],V_x[t], V_xx[t])
+                # Fx_Fu = self.ltv_sys_id.sys_id_state_pertb(self.X[t-1], self.U[t])
+                # F_x = Fx_Fu[:,:self.n_x]
+                # F_u = Fx_Fu[:,self.n_x:]
+                Q_x, Q_u, Q_xx, Q_uu, Q_ux = self.get_gradients(F_x,F_u,self.X[t-1],self.U[t],V_x[t], V_xx[t])
             else:
-                Q_x, Q_u, Q_xx, Q_uu, Q_ux = self.get_gradients(self.X_0,self.U[0],V_x[0], V_xx[0])
-            
+                # Fx_Fu = self.ltv_sys_id.sys_id_state_pertb(self.X_0, self.U[t])
+                # F_x = Fx_Fu[:,:self.n_x]
+                # F_u = Fx_Fu[:,self.n_x:]
+                Q_x, Q_u, Q_xx, Q_uu, Q_ux = self.get_gradients(F_x,F_u,self.X_0,self.U[0],V_x[0], V_xx[0])
 
             try:
                 np.linalg.cholesky(Q_uu)
@@ -151,11 +169,7 @@ class iLQR:
 
         return forward_pass_flag
 
-    def get_gradients(self,x,u,V_x_next, V_xx_next):
-
-        Fx_Fu = self.sys_id(x, u)
-        F_x = Fx_Fu[:,:self.n_x]
-        F_u = Fx_Fu[:,self.n_x:]
+    def get_gradients(self,F_x,F_u,x,u,V_x_next, V_xx_next):
 
         Q_x = self.l_x(x) + ((F_x.T) @ V_x_next)
         Q_u = self.l_u(u) + ((F_u.T) @ V_x_next)
@@ -168,16 +182,13 @@ class iLQR:
 
 
     def forward_pass_simulate(self):
-
         for t in range(self.N):
             if t==0:
-                self.U[t] = self.U_temp[t] + self.alpha*self.k[t]
-                self.X[t] = self.simulate(self.X_0.flatten(),self.U[t].flatten()).reshape(np.shape(self.X_0))
+                self.U[t] = self.U_temp[t] + self.alpha*self.k[t] #TODO check for K(x-X_0)
+                self.X[t] = self.model.simulate(self.X_0.flatten(),self.U[t].flatten()).reshape(np.shape(self.X_0))
             else:
                 self.U[t] = self.U_temp[t] + self.alpha*self.k[t] + (self.K[t] @ (self.X[t-1] - self.X_temp[t-1]))
-                self.X[t] = self.simulate(self.X[t-1].flatten(),self.U[t].flatten()).reshape(np.shape(self.X_0))
-
-
+                self.X[t] = self.model.simulate(self.X[t-1].flatten(),self.U[t].flatten()).reshape(np.shape(self.X_0))
 
     def incremental_cost(self,x,u):
         '''
@@ -193,22 +204,16 @@ class iLQR:
 		'''
         return (((x - self.X_N).T @ self.Q_final) @ (x - self.X_N)) 
 
-
     def initialize_traj(self,u_init):
-        for t in range(0, self.N):
-            if u_init is None:
-                self.U[t, :] = np.random.normal(0, self.nominal_init_stddev, (self.n_u, 1))	#np.random.normal(0, 0.01, self.n_u).reshape(self.n_u,1)#DM(array[t, 4:6])
-            else:
-                self.U[t, :] = u_init[t,:]
+        #TODO: check this vectorize function, deprecate the for loop below
+        if u_init is None:
+            self.U = np.random.normal(0, self.nominal_init_stddev, (self.N, self.n_u, 1))
+        else:
+            self.U = u_init #TODO: check the shape of u_init
 
         self.U_temp = self.U
         self.forward_pass_simulate()
         self.X_temp = self.X
-
-        
-    def forward_simulate(self):
-        pass
-    
     
     def calculate_total_cost(self,init_state, state_traj, control_traj, horizon):
         total_cost = 0

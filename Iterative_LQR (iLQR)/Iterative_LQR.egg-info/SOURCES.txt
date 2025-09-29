@@ -1,0 +1,11 @@
+setup.py
+Iterative_LQR.egg-info/PKG-INFO
+Iterative_LQR.egg-info/SOURCES.txt
+Iterative_LQR.egg-info/dependency_links.txt
+Iterative_LQR.egg-info/top_level.txt
+examples/__init__.py
+src/__init__.py
+src/arma_ltv_sys_id.py
+src/ltv_sys_id.py
+src/main_ilqr.py
+src/main_pod_ilqr.py
