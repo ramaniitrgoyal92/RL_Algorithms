@@ -105,14 +105,8 @@ class iLQR:
             F_x = Fx_Fu[t][:,:self.n_x]
             F_u = Fx_Fu[t][:,self.n_x:]
             if t>0:
-                # Fx_Fu = self.ltv_sys_id.sys_id_state_pertb(self.X[t-1], self.U[t])
-                # F_x = Fx_Fu[:,:self.n_x]
-                # F_u = Fx_Fu[:,self.n_x:]
                 Q_x, Q_u, Q_xx, Q_uu, Q_ux = self.get_gradients(F_x,F_u,self.X[t-1],self.U[t],V_x[t], V_xx[t])
             else:
-                # Fx_Fu = self.ltv_sys_id.sys_id_state_pertb(self.X_0, self.U[0])
-                # F_x = Fx_Fu[:,:self.n_x]
-                # F_u = Fx_Fu[:,self.n_x:]
                 Q_x, Q_u, Q_xx, Q_uu, Q_ux = self.get_gradients(F_x,F_u,self.X_0,self.U[0],V_x[0], V_xx[0])
 
             try:
@@ -179,7 +173,6 @@ class iLQR:
         Q_uu = 2*self.R + (F_u.T) @ ((V_xx_next + self.mu*np.eye(V_xx_next.shape[0])) @ F_u)
 
         return Q_x, Q_u, Q_xx, Q_uu, Q_ux
-
 
     def forward_pass_simulate(self):
         for t in range(self.N):
