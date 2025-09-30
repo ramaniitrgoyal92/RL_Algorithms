@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import json
-
+np.random.seed(42)
 from progressbar import *
 
 class iLQR:
@@ -99,7 +99,7 @@ class iLQR:
         # Initialize before forward pass
         del_J_alpha = 0
 
-        Fx_Fu = self.ltv_sys_id.traj_sys_id_state_pertb(self.X[0:], self.U)
+        Fx_Fu = self.ltv_sys_id.traj_sys_id_state_pertb(np.concatenate((self.X_0.reshape(1, self.n_x, 1), self.X), axis=0), self.U)
 
         for t in range(self.N-1, -1, -1):
             F_x = Fx_Fu[t][:,:self.n_x]
@@ -110,7 +110,7 @@ class iLQR:
                 # F_u = Fx_Fu[:,self.n_x:]
                 Q_x, Q_u, Q_xx, Q_uu, Q_ux = self.get_gradients(F_x,F_u,self.X[t-1],self.U[t],V_x[t], V_xx[t])
             else:
-                # Fx_Fu = self.ltv_sys_id.sys_id_state_pertb(self.X_0, self.U[t])
+                # Fx_Fu = self.ltv_sys_id.sys_id_state_pertb(self.X_0, self.U[0])
                 # F_x = Fx_Fu[:,:self.n_x]
                 # F_u = Fx_Fu[:,self.n_x:]
                 Q_x, Q_u, Q_xx, Q_uu, Q_ux = self.get_gradients(F_x,F_u,self.X_0,self.U[0],V_x[0], V_xx[0])

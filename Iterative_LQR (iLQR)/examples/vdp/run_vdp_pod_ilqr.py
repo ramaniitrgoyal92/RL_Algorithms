@@ -21,11 +21,12 @@ from ltv_sys_id import LTV_SysID
 
 class RunVdp(SimulateVDP):
 
-    def __init__(self, mu, state_dimension, control_dimension, dt):
+    def __init__(self, mu, state_dimension, control_dimension, dt, C):
         SimulateVDP.__init__(self, mu, state_dimension, control_dimension, dt)
+        self.C = C
 
     def simulate(self,x,u):
-        return self.simulate_vdp(x, u)[-1]
+        return self.C*self.simulate_vdp(x, u)[-1]
 
 
 if __name__=="__main__":
@@ -49,14 +50,15 @@ if __name__=="__main__":
     print('Goal phase : \n', final_state)
 	
     # No. of ILQR iterations to run
-    n_iterations = 100
+    n_iterations = 10
+    C = np.array([1.0, 0])
 
     # Create model instance
-    run_vdp = RunVdp(mu, state_dimension, control_dimension, dt)
+    run_vdp = RunVdp(mu, state_dimension, control_dimension, dt, C)
 
     # Create iLQR instance
     ilqr = iLQR(run_vdp, state_dimension, control_dimension, alpha, horizon, init_state, final_state, Q, Q_final, R, 
-                nominal_init_stddev, n_sys_id_samples=100, pert_sys_id_sigma=1e-5)
+                nominal_init_stddev, n_sys_id_samples=500, pert_sys_id_sigma=1e-7)
     ilqr.iterate_ilqr(n_iterations)
 
     ilqr.plot_episodic_cost_history(path_to_training_cost_fig)

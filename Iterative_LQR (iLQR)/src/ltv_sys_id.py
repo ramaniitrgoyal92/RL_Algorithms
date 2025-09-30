@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import sys
+np.random.seed(42)
 
 class LTV_SysID:
 
@@ -46,8 +47,6 @@ class LTV_SysID:
 
     def traj_sys_id_state_pertb(self,x_nom,u_nom):
         traj_AB = []
-        # print(x_nom.shape, u_nom.shape)
-        # sys.exit()
         for i in range(u_nom.shape[0]):
             traj_AB.append(self.sys_id_state_pertb(x_nom[i],u_nom[i]))
         

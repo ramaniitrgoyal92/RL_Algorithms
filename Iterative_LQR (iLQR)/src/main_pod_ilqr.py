@@ -4,7 +4,8 @@ from main_ilqr import iLQR
 
 class POD_iLQR(iLQR):
 
-    def __init__(self, MODEL, n_x, n_u, alpha, horizon, init_state, final_state, n_z, q, q_u):
+    def __init__(self, MODEL, n_x, n_u, alpha, horizon, init_state, final_state, n_z, q, q_u, Q, Q_final, R, 
+                 nominal_init_stddev, n_sys_id_samples, pert_sys_id_sigma, arma_sys_id_flag = True):
         self.n_z = n_z
         self.q = q
         self.q_u = q_u
@@ -14,7 +15,8 @@ class POD_iLQR(iLQR):
         self.V_zz = np.zeros((self.N, n_z*q+self.n_u*(q_u-1), n_z*q+self.n_u*(q_u-1)))
         self.V_z = np.zeros((self.N, n_z*q+self.n_u*(q_u-1), 1))
 
-        iLQR.__init__(self,MODEL, n_x, n_u, alpha, horizon, init_state, final_state)
+        iLQR.__init__(self, MODEL, n_x, n_u, alpha, horizon, init_state, final_state, 
+                      Q, Q_final, R, nominal_init_stddev, n_sys_id_samples, pert_sys_id_sigma, arma_sys_id_flag = arma_sys_id_flag)
 
     def backward_pass(self):
         ################## defining local functions & variables for faster access ################
@@ -32,7 +34,8 @@ class POD_iLQR(iLQR):
 
         # TEST CODE
         del_J_alpha, b_pass_success_flag = partials_list(self.X_p_0, self.U_p, V_z, V_zz, del_J_alpha)
-        A_aug, B_aug, V_z_F_XU_XU, traj = self.sys_id(x_0, u_nom, central_diff=1, V_z=V_z)
+        A_aug, B_aug, V_z_F_XU_XU, traj = self.ltv_sys_id.traj_sys_id_state_pertb(np.concatenate((self.X_0.reshape(1, self.n_x, 1), self.X), axis=0), self.U)
+        # A_aug, B_aug, V_z_F_XU_XU, traj = self.sys_id(x_0, u_nom, central_diff=1, V_z=V_z)
 
         # for t in range(self.N-1, -1, -1):
         for t in range(self.N-1, max(self.q, self.q_u)-1, -1):
