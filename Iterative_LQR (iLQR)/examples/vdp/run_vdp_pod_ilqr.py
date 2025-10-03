@@ -75,5 +75,5 @@ if __name__=="__main__":
     x_t = np.array([2.0,0.0]).reshape(state_dimension,1)
     u_t = np.array([0]).reshape(control_dimension,1)
     
-    A, B = arma_ltv_sysid.traj_sys_id(np.concatenate((ilqr.X_0.reshape(1, ilqr.n_x, 1), ilqr.X), axis=0), ilqr.U.reshape(horizon, control_dimension))
+    A, B = arma_ltv_sysid.traj_sys_id(C @ (np.concatenate((ilqr.X_0.reshape(1, ilqr.n_x, 1), ilqr.X), axis=0)), ilqr.U.reshape(horizon, control_dimension))
     print(A, B)
