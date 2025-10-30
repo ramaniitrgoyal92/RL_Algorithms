@@ -5,11 +5,12 @@ np.random.seed(42)
 
 class LTV_SysID:
 
-    def __init__(self, MODEL, n_x, n_u, n_samples=500, pert_sigma = 1e-7):
+    def __init__(self, MODEL, n_x, n_u, N, n_samples=500, pert_sigma = 1e-7):
         self.model = MODEL
-        self.n_x = n_x
-        self.n_u = n_u
-        self.n_samples = n_samples      
+        self.n_x = n_x # State dimension
+        self.n_u = n_u # Control dimension
+        self.N = N # Horizon length
+        self.n_samples = n_samples       
         self.sigma = pert_sigma # Standard deviation of the perturbation 
 
     def sys_id_state_pertb(self, x_t, u_t):
@@ -52,5 +53,34 @@ class LTV_SysID:
         
         return np.array(traj_AB)
     
-    def traj_sys_id(self, x_nom, u_nom, central_diff=0): #TODO rollout
-        return
+    def traj_sys_id(self, x_nom, u_nom, central_diff=0): #TODO rollout 
+        
+        
+        delta_x = np.zeros(((self.N+1), self.n_x, self.n_samples))
+        X, U_ = self.generate_rollouts(x_nom, u_nom)
+        traj_AB = []
+
+        # Generating delta_x for all rollouts
+        for i in range(self.N+1):
+            delta_x[i] = X[i] - x_nom[i]
+            if i>0:
+                regressor = np.hstack([delta_x[i-1,:].T, (U_[i-1].T).reshape(self.n_samples, self.n_u)])
+                AB = np.linalg.lstsq(regressor, delta_x[i].T, rcond=None)[0].T
+                traj_AB.append(AB)
+                           
+        return traj_AB
+    
+    def generate_rollouts(self, x_nom, u_nom):
+        # Taking control perturbations as a function of max control
+        u_max = np.max(abs(u_nom))
+        U_ = self.sigma*u_max*np.random.normal(0, self.sigma, (self.N+1, self.n_u, self.n_samples))
+        X = np.zeros((self.N+1, self.n_x, self.n_samples))
+        ctrl = np.zeros((self.n_u, 1))
+
+        for j in range(self.n_samples):
+            X[0, :, j] = x_nom[0].flatten()
+            for i in range(self.N):
+                ctrl[:] = u_nom[i] + U_[i,:,j].reshape(np.shape(u_nom[i]))
+                X[i+1, :, j] = self.model.simulate(X[i, :, j], ctrl.flatten()).flatten()
+
+        return X, U_

@@ -20,10 +20,11 @@ class iLQR:
         self.nominal_init_stddev = nominal_init_stddev
         if arma_sys_id_flag:
             from arma_ltv_sys_id import ARMA_LTV_SysID
-            self.ltv_sys_id = ARMA_LTV_SysID(self.model, n_x, n_u, n_z=n_x, n_samples = n_sys_id_samples, pert_sigma = pert_sys_id_sigma)
+            #self.ltv_sys_id = ARMA_LTV_SysID(self.model, n_x, n_u, n_z=n_x, n_samples = n_sys_id_samples, pert_sigma = pert_sys_id_sigma)
+            self.ltv_sys_id = ARMA_LTV_SysID(self.model, n_x, n_u, n_x, np.eye(n_x), 1, 1, self.N, n_samples=n_sys_id_samples, pert_sigma = pert_sys_id_sigma)
         else:
             from ltv_sys_id import LTV_SysID
-            self.ltv_sys_id = LTV_SysID(self.model, n_x, n_u, n_samples = n_sys_id_samples, pert_sigma = pert_sys_id_sigma)
+            self.ltv_sys_id = LTV_SysID(self.model, n_x, n_u, n_samples = n_sys_id_samples, N = self.N, pert_sigma = pert_sys_id_sigma)
 
         widgets = [Percentage(), '   ', ETA(), ' (', Timer(), ')']
         self.pbar = ProgressBar(widgets=widgets)
@@ -100,10 +101,12 @@ class iLQR:
         del_J_alpha = 0
 
         Fx_Fu = self.ltv_sys_id.traj_sys_id_state_pertb(np.concatenate((self.X_0.reshape(1, self.n_x, 1), self.X), axis=0), self.U)
-
+        # Fx_Fu = self.ltv_sys_id.traj_sys_id(np.concatenate((self.X_0.reshape(1, self.n_x, 1), self.X), axis=0), self.U.reshape(self.N,self.n_u))
         for t in range(self.N-1, -1, -1):
             F_x = Fx_Fu[t][:,:self.n_x]
             F_u = Fx_Fu[t][:,self.n_x:]
+            # F_x = A_aug[t]
+            # F_u = B_aug[t]
             if t>0:
                 Q_x, Q_u, Q_xx, Q_uu, Q_ux = self.get_gradients(F_x,F_u,self.X[t-1],self.U[t],V_x[t], V_xx[t])
             else:

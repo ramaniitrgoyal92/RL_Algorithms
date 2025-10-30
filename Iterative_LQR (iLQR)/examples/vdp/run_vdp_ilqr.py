@@ -49,14 +49,14 @@ if __name__=="__main__":
     print('Goal phase : \n', final_state)
 	
     # No. of ILQR iterations to run
-    n_iterations = 20
+    n_iterations = 60
 
     # Create model instance
     run_vdp = RunVdp(mu, state_dimension, control_dimension, dt)
 
     # Create iLQR instance
     ilqr = iLQR(run_vdp, state_dimension, control_dimension, alpha, horizon, init_state, final_state, Q, Q_final, R, 
-                nominal_init_stddev, n_sys_id_samples=100, pert_sys_id_sigma=1e-7)
+                nominal_init_stddev, n_sys_id_samples=20, pert_sys_id_sigma=1e-3, arma_sys_id_flag = False)
     ilqr.iterate_ilqr(n_iterations)
 
     ilqr.plot_episodic_cost_history(path_to_training_cost_fig)
