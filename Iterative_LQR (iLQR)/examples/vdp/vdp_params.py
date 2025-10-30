@@ -1,6 +1,6 @@
 import numpy as np
 
-mu = 2
+mu = 0.2
 
 state_dimension = 2
 control_dimension = 1
@@ -14,7 +14,7 @@ R = .05*np.eye(control_dimension)
 
 # Number of substeps in simulation
 ctrl_state_freq_ratio = 1
-dt = 0.01
+dt = 0.1
 horizon = 20 #800
 nominal_init_stddev = 0.1
 

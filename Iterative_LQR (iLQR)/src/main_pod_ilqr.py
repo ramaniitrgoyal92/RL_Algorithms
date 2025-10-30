@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from main_ilqr import iLQR
+np.random.seed(42)
 
 class POD_iLQR(iLQR):
 

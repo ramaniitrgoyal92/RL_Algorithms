@@ -26,7 +26,7 @@ class RunVdp(SimulateVDP):
         self.C = C
 
     def simulate(self,x,u):
-        return self.C*self.simulate_vdp(x, u)[-1]
+        return self.C@self.simulate_vdp(x, u)[-1]
 
 
 if __name__=="__main__":

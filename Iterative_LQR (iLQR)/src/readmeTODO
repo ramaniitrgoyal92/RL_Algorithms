@@ -1,0 +1,16 @@
+A - sys_id_rollout (ltv_id), arma_q_u>2, 
+mujoco2, Svd function for lsqfit,
+R - ilqr debug, podilqr with arma id, 
+
+Full Agenda:
+
+Finish the files - simulator added independently as an example
+Lots of loops, vectorize (solves later problem with jax)
+Add examples - pend/cartpole/swimmer/fish/materials/tensegrity
+Can we also add from IsaacSim?
+requirements/add as module/containerize/pip package
+Add comparison results with DDPG/SAC/TD3/PPO 
+
+jax version
+pytorch/CUDA version
+Parallelize for HPC?

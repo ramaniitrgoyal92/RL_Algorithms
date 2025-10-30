@@ -30,7 +30,7 @@ class iLQR:
         
         self.mu = 1e-3
         self.mu_min = 1e-3
-        self.mu_max = (10)**8
+        self.mu_max = 1e8
         self.delta_0 = 2
         self.delta = self.delta_0
         self.J_change_eps = -6e-1
